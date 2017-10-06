@@ -127,6 +127,16 @@ typedef struct MOVIndexRange {
     int64_t end;
 } MOVIndexRange;
 
+typedef struct MOVEncryptionInfo {
+    uint8_t crypt_byte_block;
+    uint8_t skip_byte_block;
+    uint8_t is_protected;
+    uint8_t per_sample_iv_size;
+    uint8_t constant_iv_size;
+    uint8_t* kid;
+    uint8_t* constant_iv;
+} MOVEncryptionInfo;
+
 typedef struct MOVStreamContext {
     AVIOContext *pb;
     int pb_is_copied;
@@ -209,9 +219,15 @@ typedef struct MOVStreamContext {
         uint8_t* auxiliary_info_end;
         uint8_t* auxiliary_info_pos;
         uint8_t auxiliary_info_default_size;
+        uint32_t auxiliary_info_sample_count;
         uint8_t* auxiliary_info_sizes;
         size_t auxiliary_info_sizes_count;
         int64_t auxiliary_info_index;
+        uint64_t* auxiliary_info_offsets;
+        size_t auxiliary_info_offsets_count;
+
+        MOVEncryptionInfo* default_encryption_info;
+        MOVEncryptionInfo* sample_encryption_info;
         struct AVAESCTR* aes_ctr;
     } cenc;
 } MOVStreamContext;

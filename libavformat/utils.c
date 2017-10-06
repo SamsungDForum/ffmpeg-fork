@@ -4306,6 +4306,7 @@ void ff_free_stream(AVFormatContext *s, AVStream *st)
 void avformat_free_context(AVFormatContext *s)
 {
     int i;
+    uint32_t j;
 
     if (!s)
         return;
@@ -4335,6 +4336,9 @@ void avformat_free_context(AVFormatContext *s)
     av_dict_free(&s->metadata);
     av_dict_free(&s->internal->id3v2_meta);
     av_freep(&s->streams);
+    for (j = 0; j < s->protection_system_data_count; ++j)
+        av_freep(&s->protection_system_data[j].pssh_box);
+    av_freep(&s->protection_system_data);
     flush_packet_queue(s);
     av_freep(&s->internal);
     av_free(s);

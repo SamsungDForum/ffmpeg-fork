@@ -870,6 +870,12 @@ typedef struct AVStreamInternal AVStreamInternal;
 #define AV_PTS_WRAP_ADD_OFFSET  1   ///< add the format specific offset on wrap detection
 #define AV_PTS_WRAP_SUB_OFFSET  -1  ///< subtract the format specific offset on wrap detection
 
+typedef struct AVProtectionSystemSpecificData {
+    uint8_t system_id[16];
+    uint8_t* pssh_box;      ///< Raw pssh box data, including box size and tag
+    uint32_t pssh_box_size; ///< Raw pssh box data size
+} AVProtectionSystemSpecificData;
+
 /**
  * Stream structure.
  * New fields can be added to the end with minor version bumps.
@@ -1917,6 +1923,13 @@ typedef struct AVFormatContext {
      * - decoding: set by user
      */
     int max_streams;
+
+    /**
+     * Each entry contains data extracted from the pssh box and may be
+     * identified by the AVProtectionSystemSpecificData::system_id.
+     */
+    AVProtectionSystemSpecificData* protection_system_data;
+    uint32_t protection_system_data_count;
 } AVFormatContext;
 
 /**

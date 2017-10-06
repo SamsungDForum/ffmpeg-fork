@@ -1607,6 +1607,11 @@ enum AVPacketSideDataType {
     AV_PKT_DATA_A53_CC,
 
     /**
+     * Encryption metadata - iv, kid and subsamples
+     */
+    AV_PKT_DATA_ENCRYPT_INFO,
+
+    /**
      * The number of side data elements (in fact a bit more than it).
      * This is not part of the public API/ABI in the sense that it may
      * change when new side data types are added.
@@ -1723,6 +1728,19 @@ typedef struct AVPacket {
  * outside the packet may be followed.
  */
 #define AV_PKT_FLAG_TRUSTED   0x0008
+
+typedef struct AVEncBytes {
+    uint32_t bytes_of_clear_data;
+    uint32_t bytes_of_enc_data;
+} AVEncBytes;
+
+typedef struct AVEncInfo {
+    uint8_t iv_size;
+    uint8_t iv[16];
+    uint8_t kid[16];
+    uint8_t subsample_count;
+    AVEncBytes subsamples[];
+} AVEncInfo;
 
 enum AVSideDataParamChangeFlags {
     AV_SIDE_DATA_PARAM_CHANGE_CHANNEL_COUNT  = 0x0001,
