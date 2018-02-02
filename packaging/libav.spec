@@ -93,6 +93,21 @@ Requires:   libswscale = %{version}-%{release}
 %description -n libswscale-devel
 development files for libswsacle
 
+%package -n libswresample
+Summary:    SW resample lib
+Group:      Multimedia/Libraries
+
+%description -n libswresample
+development files for libswresample
+
+%package -n libswresample-devel
+Summary:    SW resample lib (devel)
+Group:      Multimedia/Libraries
+Requires:   libswresample = %{version}-%{release}
+
+%description -n libswresample-devel
+development files for libswresample
+
 
 %prep
 %setup -q
@@ -179,13 +194,13 @@ rm -rf %{buildroot}
 %postun -p /sbin/ldconfig
 
 %files -n libavtools
-%manifest libavtools.manifest
+%manifest packaging/libavtools.manifest
 %defattr(-,root,root,-)
-%{_bindir}/av*
-%{_datadir}/avconv/*.avpreset
+%{_bindir}/ff*
+%{_datadir}/ffmpeg/*
 
 %files -n libavcodec
-%manifest libavcodec.manifest
+%manifest packaging/libavcodec.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libavcodec.so.*
 %license COPYING.LGPLv2.1
@@ -193,7 +208,7 @@ rm -rf %{buildroot}
 %postun -n libavcodec -p /sbin/ldconfig
 
 %files -n libavformat
-%manifest libavformat.manifest
+%manifest packaging/libavformat.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libavformat.so.*
 %license COPYING.LGPLv2.1
@@ -201,7 +216,7 @@ rm -rf %{buildroot}
 %postun -n libavformat -p /sbin/ldconfig
 
 %files -n libavutil
-%manifest libavutil.manifest
+%manifest packaging/libavutil.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libavutil.so.*
 %license COPYING.LGPLv2.1
@@ -209,7 +224,7 @@ rm -rf %{buildroot}
 %postun -n libavutil -p /sbin/ldconfig
 
 %files -n libavfilter
-%manifest libavfilter.manifest
+%manifest packaging/libavfilter.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libavfilter.so.*
 %license COPYING.LGPLv2.1
@@ -217,12 +232,20 @@ rm -rf %{buildroot}
 %postun -n libavfilter -p /sbin/ldconfig
 
 %files -n libswscale
-%manifest libswscale.manifest
+%manifest packaging/libswscale.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libswscale.so.*
 %license COPYING.LGPLv2.1
 %post -n libswscale -p /sbin/ldconfig
 %postun -n libswscale -p /sbin/ldconfig
+
+%files -n libswresample
+%manifest packaging/libswresample.manifest
+%defattr(-,root,root,-)
+%{_libdir}/libswresample.so.*
+%license COPYING.LGPLv2.1
+%post -n libswresample -p /sbin/ldconfig
+%postun -n libswresample -p /sbin/ldconfig
 
 %files -n libavcodec-devel
 %defattr(-,root,root,-)
@@ -253,3 +276,10 @@ rm -rf %{buildroot}
 %_includedir/libswscale/*
 %_libdir/libswscale.so
 %_libdir/pkgconfig/libswscale.pc
+
+%files -n libswresample-devel
+%defattr(-,root,root,-)
+%_includedir/libswresample/*
+%_libdir/libswresample.so
+%_libdir/pkgconfig/libswresample.pc
+
