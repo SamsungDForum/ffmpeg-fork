@@ -7,7 +7,6 @@ URL:        http://libav.org
 License:    LGPL-2.1+
 Source0:    %{name}-%{version}.tar.gz
 
-
 %description
 AV codec library
 
@@ -108,6 +107,7 @@ Requires:   libswresample = %{version}-%{release}
 %description -n libswresample-devel
 development files for libswresample
 
+%define SUFFIX -juvo
 
 %prep
 %setup -q
@@ -155,6 +155,7 @@ export CONFIGURE_OPTIONS="--enable-shared    --disable-static   \
 --enable-swscale        --disable-yasm	 \
 --enable-fft    --enable-rdft   --enable-mdct   --enable-neon \
 --enable-network --enable-protocol=tcp --enable-demuxer=hls --enable-demuxer=rtsp --enable-demuxer=rtp --enable-demuxer=ac3 --enable-demuxer=dash \
+--build-suffix=%{SUFFIX} \
 %{?asan:--disable-inline-asm} \
 "
 
@@ -202,7 +203,7 @@ rm -rf %{buildroot}
 %files -n libavcodec
 %manifest packaging/libavcodec.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libavcodec.so.*
+%{_libdir}/libavcodec%{SUFFIX}.so.*
 %license COPYING.LGPLv2.1
 %post -n libavcodec -p /sbin/ldconfig
 %postun -n libavcodec -p /sbin/ldconfig
@@ -210,7 +211,7 @@ rm -rf %{buildroot}
 %files -n libavformat
 %manifest packaging/libavformat.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libavformat.so.*
+%{_libdir}/libavformat%{SUFFIX}.so.*
 %license COPYING.LGPLv2.1
 %post -n libavformat -p /sbin/ldconfig
 %postun -n libavformat -p /sbin/ldconfig
@@ -218,7 +219,7 @@ rm -rf %{buildroot}
 %files -n libavutil
 %manifest packaging/libavutil.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libavutil.so.*
+%{_libdir}/libavutil%{SUFFIX}.so.*
 %license COPYING.LGPLv2.1
 %post -n libavutil -p /sbin/ldconfig
 %postun -n libavutil -p /sbin/ldconfig
@@ -226,7 +227,7 @@ rm -rf %{buildroot}
 %files -n libavfilter
 %manifest packaging/libavfilter.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libavfilter.so.*
+%{_libdir}/libavfilter%{SUFFIX}.so.*
 %license COPYING.LGPLv2.1
 %post -n libavfilter -p /sbin/ldconfig
 %postun -n libavfilter -p /sbin/ldconfig
@@ -234,7 +235,7 @@ rm -rf %{buildroot}
 %files -n libswscale
 %manifest packaging/libswscale.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libswscale.so.*
+%{_libdir}/libswscale%{SUFFIX}.so.*
 %license COPYING.LGPLv2.1
 %post -n libswscale -p /sbin/ldconfig
 %postun -n libswscale -p /sbin/ldconfig
@@ -242,7 +243,7 @@ rm -rf %{buildroot}
 %files -n libswresample
 %manifest packaging/libswresample.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libswresample.so.*
+%{_libdir}/libswresample%{SUFFIX}.so.*
 %license COPYING.LGPLv2.1
 %post -n libswresample -p /sbin/ldconfig
 %postun -n libswresample -p /sbin/ldconfig
@@ -250,36 +251,36 @@ rm -rf %{buildroot}
 %files -n libavcodec-devel
 %defattr(-,root,root,-)
 %_includedir/libavcodec/*
-%_libdir/libavcodec.so
-%_libdir/pkgconfig/libavcodec.pc
+%_libdir/libavcodec%{SUFFIX}.so
+%_libdir/pkgconfig/libavcodec%{SUFFIX}.pc
 
 %files -n libavformat-devel
 %defattr(-,root,root,-)
 %_includedir/libavformat/*
-%_libdir/libavformat.so
-%_libdir/pkgconfig/libavformat.pc
+%_libdir/libavformat%{SUFFIX}.so
+%_libdir/pkgconfig/libavformat%{SUFFIX}.pc
 
 %files -n libavutil-devel
 %defattr(-,root,root,-)
 %_includedir/libavutil/*
-%_libdir/libavutil.so
-%_libdir/pkgconfig/libavutil.pc
+%_libdir/libavutil%{SUFFIX}.so
+%_libdir/pkgconfig/libavutil%{SUFFIX}.pc
 
 %files -n libavfilter-devel
 %defattr(-,root,root,-)
 %_includedir/libavfilter/*
-%_libdir/libavfilter.so
-%_libdir/pkgconfig/libavfilter.pc
+%_libdir/libavfilter%{SUFFIX}.so
+%_libdir/pkgconfig/libavfilter%{SUFFIX}.pc
 
 %files -n libswscale-devel
 %defattr(-,root,root,-)
 %_includedir/libswscale/*
-%_libdir/libswscale.so
-%_libdir/pkgconfig/libswscale.pc
+%_libdir/libswscale%{SUFFIX}.so
+%_libdir/pkgconfig/libswscale%{SUFFIX}.pc
 
 %files -n libswresample-devel
 %defattr(-,root,root,-)
 %_includedir/libswresample/*
-%_libdir/libswresample.so
-%_libdir/pkgconfig/libswresample.pc
+%_libdir/libswresample%{SUFFIX}.so
+%_libdir/pkgconfig/libswresample%{SUFFIX}.pc
 
