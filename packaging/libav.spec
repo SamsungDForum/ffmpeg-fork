@@ -181,14 +181,19 @@ export CONFIGURE_OPTIONS+="--extra-cflags=-mfpu=neon"
     --shlibdir=%_libdir \
     $CONFIGURE_OPTIONS
 
+cd third_party/patchelf-0.9; ./configure; cd -
+
 %build
 
 
 %__make %{?_smp_mflags}
 
+cd third_party/patchelf-0.9; make; cd -
+
 %install
 rm -rf %{buildroot}
 %make_install
+tools/modify_rpath.sh %{buildroot}
 
 %post -p /sbin/ldconfig
 
