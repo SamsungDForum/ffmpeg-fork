@@ -1140,7 +1140,11 @@ static int mov_read_ftyp(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 /* this atom should contain all header atoms */
 static int mov_read_moov(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 {
-    int ret;
+    int ret = 0;
+    AVStream* st;
+    unsigned int i;
+    uint8_t *side_data;
+    size_t side_data_size;
 
     if (c->found_moov) {
         av_log(c->fc, AV_LOG_WARNING, "Found duplicated MOOV Atom. Skipped it\n");
@@ -1150,10 +1154,30 @@ static int mov_read_moov(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 
     if ((ret = mov_read_default(c, pb, atom)) < 0)
         return ret;
+    if (c->encryption_init_info) {
+        for (i = 0; i < c->fc->nb_streams; ++i) {
+            st = c->fc->streams[i];
+            side_data = av_encryption_init_info_add_side_data(c->encryption_init_info, &side_data_size);
+            if (!side_data) {
+                ret = AVERROR(ENOMEM);
+                goto finish;
+            }
+            ret = av_stream_add_side_data(st, AV_PKT_DATA_ENCRYPTION_INIT_INFO,
+                    side_data, side_data_size);
+            if (ret < 0) {
+                av_free(side_data);
+                goto finish;
+            }
+        }
+    }
     /* we parsed the 'moov' atom, we can terminate the parsing as soon as we find the 'mdat' */
     /* so we don't parse the whole file if over a network */
     c->found_moov=1;
-    return 0; /* now go for mdat */
+    /* now go for mdat */
+finish:
+    av_encryption_init_info_free(c->encryption_init_info);
+    c->encryption_init_info = NULL;
+    return ret;
 }
 
 static MOVFragmentStreamInfo * get_frag_stream_info(
@@ -6349,15 +6373,9 @@ static int mov_read_pssh(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 {
     AVEncryptionInitInfo *info, *old_init_info;
     uint8_t **key_ids;
-    AVStream *st;
-    uint8_t *side_data, *extra_data, *old_side_data;
-    size_t side_data_size;
-    int ret = 0, old_side_data_size;
+    uint8_t *extra_data;
+    int ret = 0;
     unsigned int version, kid_count, extra_data_size, alloc_size = 0;
-
-    if (c->fc->nb_streams < 1)
-        return 0;
-    st = c->fc->streams[c->fc->nb_streams-1];
 
     version = avio_r8(pb); /* version */
     avio_rb24(pb);  /* flags */
@@ -6370,14 +6388,14 @@ static int mov_read_pssh(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     if (avio_read(pb, info->system_id, 16) != 16) {
         av_log(c->fc, AV_LOG_ERROR, "Failed to read the system id\n");
         ret = AVERROR_INVALIDDATA;
-        goto finish;
+        goto fail;
     }
 
     if (version > 0) {
         kid_count = avio_rb32(pb);
         if (kid_count >= INT_MAX / sizeof(*key_ids)) {
             ret = AVERROR(ENOMEM);
-            goto finish;
+            goto fail;
         }
 
         for (unsigned int i = 0; i < kid_count && !pb->eof_reached; i++) {
@@ -6386,73 +6404,57 @@ static int mov_read_pssh(MOVContext *c, AVIOContext *pb, MOVAtom atom)
                                       min_kid_count * sizeof(*key_ids));
             if (!key_ids) {
                 ret = AVERROR(ENOMEM);
-                goto finish;
+                goto fail;
             }
             info->key_ids = key_ids;
 
             info->key_ids[i] = av_mallocz(16);
             if (!info->key_ids[i]) {
                 ret = AVERROR(ENOMEM);
-                goto finish;
+                goto fail;
             }
             info->num_key_ids = i + 1;
 
             if (avio_read(pb, info->key_ids[i], 16) != 16) {
                 av_log(c->fc, AV_LOG_ERROR, "Failed to read the key id\n");
                 ret = AVERROR_INVALIDDATA;
-                goto finish;
+                goto fail;
             }
         }
 
         if (pb->eof_reached) {
             av_log(c->fc, AV_LOG_ERROR, "Hit EOF while reading pssh\n");
             ret = AVERROR_INVALIDDATA;
-            goto finish;
+            goto fail;
         }
     }
 
     extra_data_size = avio_rb32(pb);
     ret = mov_try_read_block(pb, extra_data_size, &extra_data);
     if (ret < 0)
-        goto finish;
+        goto fail;
 
     av_freep(&info->data);  // malloc(0) may still allocate something.
     info->data = extra_data;
     info->data_size = extra_data_size;
 
     // If there is existing initialization data, append to the list.
-    old_side_data = av_stream_get_side_data(st, AV_PKT_DATA_ENCRYPTION_INIT_INFO, &old_side_data_size);
-    if (old_side_data) {
-        old_init_info = av_encryption_init_info_get_side_data(old_side_data, old_side_data_size);
-        if (old_init_info) {
-            // Append to the end of the list.
-            for (AVEncryptionInitInfo *cur = old_init_info;; cur = cur->next) {
-                if (!cur->next) {
-                    cur->next = info;
-                    break;
-                }
+    old_init_info = c->encryption_init_info;
+    if (old_init_info) {
+        // Append to the end of the list.
+        for (AVEncryptionInitInfo *cur = old_init_info;; cur = cur->next) {
+            if (!cur->next) {
+                cur->next = info;
+                break;
             }
-            info = old_init_info;
-        } else {
-            // Assume existing side-data will be valid, so the only error we could get is OOM.
-            ret = AVERROR(ENOMEM);
-            goto finish;
         }
+        info = old_init_info;
     }
-
-    side_data = av_encryption_init_info_add_side_data(info, &side_data_size);
-    if (!side_data) {
-        ret = AVERROR(ENOMEM);
-        goto finish;
-    }
-    ret = av_stream_add_side_data(st, AV_PKT_DATA_ENCRYPTION_INIT_INFO,
-                                  side_data, side_data_size);
-    if (ret < 0)
-        av_free(side_data);
-
-finish:
-    av_encryption_init_info_free(info);
-    return ret;
+    c->encryption_init_info = info;
+    return 0;
+fail:
+     av_encryption_init_info_free(info);
+     return ret;
 }
 
 static int mov_read_schm(MOVContext *c, AVIOContext *pb, MOVAtom atom)
