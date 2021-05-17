@@ -7,6 +7,9 @@ URL:        https://ffmpeg.org
 License:    LGPL-2.1+
 Source0:    %{name}-%{version}.tar.gz
 
+BuildRequires: pkgconfig(libxml-2.0)
+BuildRequires: pkgconfig(gnutls)
+
 %description
 ffmpeg tools
 
@@ -67,6 +70,7 @@ export CONFIGURE_OPTIONS="--enable-shared    --disable-static   --disable-stripp
 --enable-swscale        --disable-yasm	 \
 --enable-fft    --enable-rdft   --enable-mdct   --enable-neon \
 --enable-network --enable-protocol=tcp --enable-demuxer=hls --enable-demuxer=rtsp --enable-demuxer=rtp --enable-demuxer=ac3 --enable-demuxer=dash \
+--enable-libxml2 --enable-gnutls --enable-protocol=https \
 --build-suffix=%{SUFFIX} \
 %{?asan:--disable-inline-asm} \
 "
@@ -81,7 +85,7 @@ export CONFIGURE_OPTIONS+="--disable-mmx "
 %else
 %endif
 
-CFLAGS="%{optflags} -fPIC -d -DEXPORT_API=\"__attribute__((visibility(\\\"default\\\")))\" "; export CFLAGS
+CFLAGS="%{optflags} -fPIC -DEXPORT_API=\"__attribute__((visibility(\\\"default\\\")))\" "; export CFLAGS
 
 %ifarch %{arm}
 export CONFIGURE_OPTIONS+="--extra-cflags=-mfpu=neon"
